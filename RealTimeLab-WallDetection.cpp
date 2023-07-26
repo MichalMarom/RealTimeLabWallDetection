@@ -33,7 +33,9 @@ vector<vector<float>> random_wall()
     return random_wall;
 }
 
-// ****** Find Plane ******
+///////////////////////////////
+// ****** Find Plane ****** //
+/////////////////////////////
 bool collinear(float x1, float y1, float x2, float y2, float x3, float y3) 
 {
     return (y1 - y2) * (x1 - x3) == (y1 - y3) * (x1 - x2);
@@ -121,7 +123,9 @@ bool Sol_with_plane(vector <vector<float>>& wall)
     return true;
 }
 
-// ****** T-Test ******
+///////////////////////////
+// ****** T-Test ****** //
+/////////////////////////
 float computeMean(const vector<float> v)
 {
     float sum = 0;
@@ -164,9 +168,18 @@ bool Sol_with_t_test(vector <vector<float>>& wall)
 }
 
 
-// ****** Eigen ******
-// Function to find the plane that minimizes the distance to a set of points
-Eigen::Vector4d findMinimizingPlane(const std::vector<Eigen::Vector3d>& points) {
+//////////////////////////
+// ****** Eigen ****** //
+////////////////////////
+
+// Function that find the plane that minimizes the distance to a set of points
+// input:
+//       vector<Eigen::Vector3d> points
+//
+// output:
+//        Eigen::Vector4d        plane equation (ax+by+cz+d=0)
+
+Eigen::Vector4d findMinimizingPlane(const vector<Eigen::Vector3d>& points) {
     Eigen::Matrix<double, Eigen::Dynamic, 3> A(points.size(), 3);
 
     // Fill the matrix A with points
@@ -194,7 +207,16 @@ Eigen::Vector4d findMinimizingPlane(const std::vector<Eigen::Vector3d>& points) 
     return Eigen::Vector4d(normal.x(), normal.y(), normal.z(), d);
 }
 
-float findPlaneError(const Eigen::Vector4d& plane, const std::vector<Eigen::Vector3d>& points)
+
+// Function that calculate the sum of distance to a set of points from the plane
+// input:
+//       Eigen::Vector4d&        plane
+//       vector<Eigen::Vector3d> points
+//
+// output:
+//        float                   error
+
+float findPlaneError(const Eigen::Vector4d& plane, const vector<Eigen::Vector3d>& points)
 {
     float error = 0;
     float a = plane[0];
@@ -215,35 +237,17 @@ float findPlaneError(const Eigen::Vector4d& plane, const std::vector<Eigen::Vect
     return error;
 }
 
-bool Sol_with_eigen(vector <vector<float>>& wall)
-{
-    std::vector<Eigen::Vector3d> points;
-    for (auto point : wall)
-    {
-        points.push_back(Eigen::Vector3d(point[0], point[1], point[2]));
-    }
-
-    // Find the plane that minimizes the distance to the points
-    Eigen::Vector4d plane = findMinimizingPlane(points);
-
-    // Output the plane equation (ax + by + cz + d = 0)
-    std::cout << "Plane equation: "
-        << plane[0] << "x + " << plane[1] << "y + " << plane[2] << "z + " << plane[3] << " = 0"
-        << std::endl;
-
-    float plane_error = findPlaneError(plane, points);
-    std::cout << "Plane error: " << plane_error << std::endl;
-
-    if (plane_error > 100)
-    {
-        return false;
-    }
-    return true;
-}
+// Function that calculate the angle between given plane to X-Z Plane
+// input:
+//       Eigen::Vector3d& plane (coefficients a,b,c of the plane equation)
+//
+// output:
+//        double          angleDeg (in degrees)   
 
 double angleBetweenPlanes(Eigen::Vector3d normalVector)
 {
-    Eigen::Vector3d xzPlaneNormal = Eigen::Vector3d(0, 1, 0); // Normal vector of the X-Z plane
+    // Normal vector of the X-Z plane
+    Eigen::Vector3d xzPlaneNormal = Eigen::Vector3d(0, 1, 0); 
 
     double dotProd = (normalVector[0] * xzPlaneNormal[0]) + (normalVector[1] * xzPlaneNormal[1]) + (normalVector[2] * xzPlaneNormal[2]);
     double mag1 = sqrt((normalVector[0] * normalVector[0]) + (normalVector[1] * normalVector[1]) + (normalVector[2] * normalVector[2]));
@@ -256,15 +260,31 @@ double angleBetweenPlanes(Eigen::Vector3d normalVector)
     double angleDeg = angleRad * (180.0 / M_PI);
     return angleDeg;
 }
+
+// Function that given points - decides whether they are a wall
+// input:
+//       vector<Eigen::Vector3d> points
+//
+// output:
+//        bool                   is_wall
+
 bool wall_detector(vector <Eigen::Vector3d>& points)
 {
+    bool is_wall = false;
+
     // Find the plane that minimizes the distance to the points
     Eigen::Vector4d plane = findMinimizingPlane(points);
     Eigen::Vector3d plane_normal = Eigen::Vector3d(plane[0], plane[1], plane[2]);
-    //plot_plane(plane);
+
+    // Find the angle between the planeand XZ-plane
     double angle_between_plane_and_XZplane = angleBetweenPlanes(plane_normal);
 
+    // Check if it is wall ??
+
+    return true;
+
 }
+
 
 int main() 
 {
@@ -294,7 +314,7 @@ int main()
     vector<vector<int>> confusionMatrix(numClasses, vector<int>(numClasses, 0));
 
     // Update the confusion matrix based on the predicted and actual labels
-    for (size_t i = 0; i < actualLabels.size(); ++i) {
+    for (size_t i = 0; i < predictedLabels.size(); ++i) {
         int actualClass = actualLabels[i];
         int predictedClass = predictedLabels[i];
         confusionMatrix[actualClass][predictedClass]++;

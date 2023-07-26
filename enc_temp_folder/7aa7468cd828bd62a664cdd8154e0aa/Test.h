@@ -1,6 +1,5 @@
 #include "IncludeLibraries.h"
 
-//Test class that represents a test for the algorithm that contains a set of points and a label
 class Test
 {
 public:
