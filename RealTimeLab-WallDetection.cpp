@@ -96,7 +96,7 @@ vector<float> equation_plane(float x1, float y1, float z1,
 
 
 }
-`
+
 
 bool is_point_on_plane(vector<float>& point, vector<float>& plane)
 {
@@ -261,7 +261,7 @@ bool wall_detector(vector <Eigen::Vector3d>& points)
     // Find the plane that minimizes the distance to the points
     Eigen::Vector4d plane = findMinimizingPlane(points);
     Eigen::Vector3d plane_normal = Eigen::Vector3d(plane[0], plane[1], plane[2]);
-    plot_plane(plane);
+    //plot_plane(plane);
     double angle_between_plane_and_XZplane = angleBetweenPlanes(plane_normal);
 
 }
