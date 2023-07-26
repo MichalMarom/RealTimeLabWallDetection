@@ -318,7 +318,6 @@ int main()
         int actualClass = actualLabels[i];
         int predictedClass = predictedLabels[i];
         confusionMatrix[actualClass][predictedClass]++;
-        i++;
     }
 
     return 0;
