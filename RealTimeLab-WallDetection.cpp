@@ -172,6 +172,35 @@ bool Sol_with_t_test(vector <vector<float>>& wall)
 // ****** Eigen ****** //
 ////////////////////////
 
+// Function that calculate the sum of distance to a set of points from the plane
+// input:
+//       Eigen::Vector4d&        plane
+//       vector<Eigen::Vector3d> points
+//
+// output:
+//        float                   error
+
+float findPlaneError(const Eigen::Vector4d& plane, const vector<Eigen::Vector3d>& points)
+{
+    float error = 0;
+    float a = plane[0];
+    float b = plane[1];
+    float c = plane[2];
+    float d = plane[3];
+
+    for (auto point : points) {
+        float x = point[0];
+        float y = point[1];
+        float z = point[2];
+        float numerator = std::abs(a * x + b * y + c * z + d);
+        float denominator = std::sqrt(a * a + b * b + c * c);
+        error += (numerator / denominator);
+
+    }
+
+    return error;
+}
+
 // Function that find the plane that minimizes the distance to a set of points
 // input:
 //       vector<Eigen::Vector3d> points
@@ -205,36 +234,6 @@ Eigen::Vector4d findMinimizingPlane(const vector<Eigen::Vector3d>& points) {
 
     // Return the plane as a 4D vector (a, b, c, d)
     return Eigen::Vector4d(normal.x(), normal.y(), normal.z(), d);
-}
-
-
-// Function that calculate the sum of distance to a set of points from the plane
-// input:
-//       Eigen::Vector4d&        plane
-//       vector<Eigen::Vector3d> points
-//
-// output:
-//        float                   error
-
-float findPlaneError(const Eigen::Vector4d& plane, const vector<Eigen::Vector3d>& points)
-{
-    float error = 0;
-    float a = plane[0];
-    float b = plane[1];
-    float c = plane[2];
-    float d = plane[3];
-
-    for (auto point : points) {
-        float x = point[0];
-        float y = point[1];
-        float z = point[2];
-        float numerator = std::abs(a * x + b * y + c * z + d);
-        float denominator = std::sqrt(a * a + b * b + c * c);
-        error += (numerator / denominator);
-
-    }
-
-    return error;
 }
 
 // Function that calculate the angle between given plane to X-Z Plane
@@ -285,39 +284,38 @@ bool wall_detector(vector <Eigen::Vector3d>& points)
 
 }
 
-
 int main() 
 {
     vector<Test> tests;
-    vector<bool> actualLabels;
-    vector<bool> predictedLabels;
+    vector<bool> actual_labels;
+    vector<bool> predicted_labels;
     int numClasses = 2;
 
     for (int i = 0; i < 10000; i++) {
 
         if (i < 5000) {
             tests.emplace_back(true);
-            actualLabels.push_back(true);
+            actual_labels.push_back(true);
         }
         else {
             tests.emplace_back(false);
-            actualLabels.push_back(false);
+            actual_labels.push_back(false);
         }
     }
 
 
     for (auto test : tests)
     {
-        predictedLabels.push_back(wall_detector(test.points));
+        predicted_labels.push_back(wall_detector(test.points));
     }
 
     vector<vector<int>> confusionMatrix(numClasses, vector<int>(numClasses, 0));
 
     // Update the confusion matrix based on the predicted and actual labels
-    for (size_t i = 0; i < predictedLabels.size(); ++i) {
-        int actualClass = actualLabels[i];
-        int predictedClass = predictedLabels[i];
-        confusionMatrix[actualClass][predictedClass]++;
+    for (size_t i = 0; i < predicted_labels.size(); ++i) {
+        int actual_class = actual_labels[i];
+        int predicted_class = predicted_labels[i];
+        confusionMatrix[actual_class][predicted_class]++;
     }
 
     return 0;
