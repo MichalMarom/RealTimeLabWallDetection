@@ -1,13 +1,13 @@
 #include "Test.h"
 
-// Function that given if this test represent a wall or not -  Sets points randomly for that test
-// input:
-//       bool                   is_wall
-//
-// output:
-//       vector<Eigen::Vector3d> random_wall (Points vector)
+/* Function that given if this test represent a wall or not - Sets points randomly for that test
+ input:
+//       bool   is_wall
 
-vector<Eigen::Vector3d> Test::random_wall(bool is_wall)
+ output:
+       vector<Eigen::Vector3d> random_wall (Points vector)
+*/
+vector<Eigen::Vector3d> Test::randomWall(bool is_wall)
 {
     int random_points = 2000;
     std::random_device rd;

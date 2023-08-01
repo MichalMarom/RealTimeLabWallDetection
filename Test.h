@@ -1,6 +1,6 @@
 #include "IncludeLibraries.h"
 
-//Test class that represents a test for the algorithm that contains a set of points and a label
+// Test class that represents a test for the algorithm that contains a set of points and a label
 class Test
 {
 public:
@@ -9,12 +9,12 @@ public:
 
 		// Constructor
 		Test(bool isWall_) { 
-            this->points = random_wall(is_wall);
+            this->points = randomWall(is_wall);
             this->is_wall = isWall_;
 		}
 
 		// Sets points randomly for the test
-		vector<Eigen::Vector3d> random_wall(bool is_wall);
+		vector<Eigen::Vector3d> randomWall(bool is_wall);
 
 };
 
