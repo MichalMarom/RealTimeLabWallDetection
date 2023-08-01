@@ -271,8 +271,50 @@ bool wall_detector(vector <Eigen::Vector3d>& points)
 {
     bool is_wall = false;
 
+    vector<float> x_cord;
+    for (auto point : points)
+    {
+        x_cord.push_back(point[0]);
+    }
+    float x_mean = computeMean(x_cord);
+
+    vector<float> y_cord;
+    for (auto point : points)
+    {
+        y_cord.push_back(point[1]);
+    }
+    float y_mean = computeMean(y_cord);
+
+    vector<float> z_cord;
+    for (auto point : points)
+    {
+        z_cord.push_back(point[2]);
+    }
+
+    float z_mean = computeMean(z_cord);
+
+    float test_1 = z_mean / x_mean;
+    float test_2 = z_mean / y_mean;
+
+    test_1 = (int(floor(test_1 * 100))) / 100;
+    test_2 = (int(floor(test_2 * 100))) / 100;
+    int itest_1 = (int)test_1;
+    int itest_2 = (int)test_2;
+
+    test_1 -= itest_1;
+    test_2 -= itest_2;
+
+    if (test_1 == test_2)
+    {
+        return true;
+    }
+    else {
+        return false;
+    }
+
     // Find the plane that minimizes the distance to the points
     Eigen::Vector4d plane = findMinimizingPlane(points);
+
     Eigen::Vector3d plane_normal = Eigen::Vector3d(plane[0], plane[1], plane[2]);
 
     // Find the angle between the planeand XZ-plane
