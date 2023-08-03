@@ -123,11 +123,11 @@ bool planeSolution(vector <vector<float>>& wall)
 ///////////////////////////
 // ****** T-Test ****** //
 /////////////////////////
-float computeMean(const vector<float> v)
+float computeMean(const vector<float> value)
 {
     float sum = 0;
-    for (auto e : v) { sum += e; }
-    return sum / v.size();
+    for (auto e : value) { sum += e; }
+    return sum / value.size();
 }
 
 float computeStdDeviation(const vector<float>& values, float mean)
@@ -164,6 +164,55 @@ bool TTestSol(vector <vector<float>>& wall)
     return true;
 }
 
+bool zTest(const std::vector<Eigen::Vector3d>& wall)
+{
+    // Find the noise in Z coordinates and check if the t_score is smeller then 1 - then the noise is normally distributed
+    vector<float> z_cord;
+    for (const auto& point : wall)
+    {
+        z_cord.push_back(point[2]);
+    }
+
+    float mean = computeMean(z_cord);
+    float stddev = computeStdDeviation(z_cord, mean);
+
+    // Calculate the sample mean
+    float sample_mean = computeMean(z_cord);
+
+    // Calculate the sample standard deviation
+    float sample_stddev = computeStdDeviation(z_cord, sample_mean);
+
+    // Calculate the number of samples
+    int num_samples = static_cast<int>(z_cord.size());
+
+    // Calculate the Z-score
+    double z_score = (sample_mean - mean) / (stddev / sqrt(static_cast<double>(num_samples)));
+
+    // Define the significance level (alpha) - choose an appropriate value based on your test
+    const double alpha = 0.05;
+
+    // Check if the absolute Z-score is less than the critical value for the significance level
+    double critical_value = 1.96; // For a two-tailed test at alpha = 0.05
+    if (std::abs(z_score) <= critical_value)
+    {
+        return true; // Null hypothesis accepted, sample mean is not significantly different from population mean
+    }
+    else
+    {
+        return false; // Null hypothesis rejected, sample mean is significantly different from population mean
+    }
+}
+
+bool isDataNormallyDistributed(const std::vector<Eigen::Vector3d>& wall)
+{
+    // Perform the Z-test on the 'wall' data
+    bool is_data_normal = zTest(wall);
+
+    // Return the result
+    return is_data_normal;
+}
+
+
 //////////////////////////
 // ****** Eigen ****** //
 ////////////////////////
@@ -175,7 +224,6 @@ input:
 output:       
        float error
 */
-
 float findPlaneError(const Eigen::Vector4d& plane, const vector<Eigen::Vector3d>& points)
 {
     float error = 0;
@@ -262,6 +310,7 @@ double angleBetweenPlanes(Eigen::Vector3d normalVector)
  output:
         bool  is_wall
 */
+
 bool wallDetector(vector <Eigen::Vector3d>& points)
 {
     bool is_wall = false;
@@ -274,8 +323,9 @@ bool wallDetector(vector <Eigen::Vector3d>& points)
     double angle_between_plane_and_XZplane = angleBetweenPlanes(plane_normal);
 
     // Check if it is wall ??
+    bool isNormallyDistributed = isDataNormallyDistributed(points);
 
-    return true;
+    return isNormallyDistributed;
 }
 
 int main() 
