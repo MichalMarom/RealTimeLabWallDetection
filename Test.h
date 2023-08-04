@@ -9,7 +9,7 @@ public:
 
 		// Constructor
 		Test(bool isWall_) { 
-            this->points = random_wall(is_wall);
+            this->points = random_wall(isWall_);
             this->is_wall = isWall_;
 		}
 
