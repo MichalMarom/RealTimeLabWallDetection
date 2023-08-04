@@ -1,6 +1,38 @@
 #include "IncludeLibraries.h"
 #include "Test.h"
 
+bool isNormallyDistributed(const std::vector<double>& data, double significance_level = 0.05) {
+    if (data.empty()) {
+        // Empty data vector, cannot perform the test
+        return false;
+    }
+
+    // Sort the data vector in ascending order
+    std::vector<double> sorted_data = data;
+    std::sort(sorted_data.begin(), sorted_data.end());
+
+    // Calculate the mean and standard deviation of the data
+    double mean = gsl_stats_mean(&sorted_data[0], 1, sorted_data.size());
+    double stddev = gsl_stats_sd(&sorted_data[0], 1, sorted_data.size());
+
+    // Calculate the test statistic (D) and p-value
+    double D = 0.0;
+    for (size_t i = 0; i < sorted_data.size(); ++i) {
+        double F_obs = gsl_cdf_ugaussian_P((sorted_data[i] - mean) / stddev);
+        double F_exp = (i + 1.0) / sorted_data.size();
+        double diff = std::abs(F_obs - F_exp);
+        if (diff > D) {
+            D = diff;
+        }
+    }
+
+    // Calculate the critical value for the given significance level and sample size
+    double critical_value = gsl_cdf_ugaussian_Pinv(1.0 - significance_level / 2.0) / std::sqrt(sorted_data.size());
+
+    return D <= critical_value;
+}
+
+
 // Tolerance value for floating-point precision
 const double tolerance = 1e-6;
 
@@ -310,7 +342,6 @@ double angleBetweenPlanes(Eigen::Vector3d normalVector)
  output:
         bool  is_wall
 */
-
 bool wallDetector(vector <Eigen::Vector3d>& points)
 {
     bool is_wall = false;
@@ -322,10 +353,13 @@ bool wallDetector(vector <Eigen::Vector3d>& points)
     // Find the angle between the planeand XZ-plane
     double angle_between_plane_and_XZplane = angleBetweenPlanes(plane_normal);
 
-    // Check if it is wall ??
-    bool isNormallyDistributed = isDataNormallyDistributed(points);
+    std::vector<double> z_coord;
+    for (Eigen::Vector3d point : points) {
+        z_coord.push_back(point.z());
+    }
 
-    return isNormallyDistributed;
+    // Check if it is wall ??
+    return isNormallyDistributed(z_coord);
 }
 
 int main() 
