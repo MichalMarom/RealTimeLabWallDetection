@@ -345,6 +345,7 @@ int main()
         }
     }
 
+
     for (auto test : tests)
     {
         predicted_labels.push_back(wall_detector(test.points));
