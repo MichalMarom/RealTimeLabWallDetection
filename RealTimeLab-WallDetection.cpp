@@ -267,10 +267,59 @@ double angleBetweenPlanes(Eigen::Vector3d normalVector)
 // output:
 //        bool                   is_wall
 
+//////////////////////////
+// ****** Plot ****** //
+////////////////////////
+void plotPlane(vector <Eigen::Vector3d>& points)
+{
+    std::vector<std::vector<double>> x, y, z;
+    for(auto point: points){
+        std::vector<double> x_row, y_row, z_row;
+        for (auto point : points) {
+            x_row.push_back(point[0]);
+            y_row.push_back(point[1]);
+            z_row.push_back(point[2]);
+        }
+        x.push_back(x_row);
+        y.push_back(y_row);
+        z.push_back(z_row);
+    }
+
+    plt::plot_surface(x, y, z);
+    plt::show();
+
+    ////Plane coefficients(a, b, c, d) from the equation ax + by + cz + d = 0
+    ////a, b, c, d = 2, 3, -1, 5
+
+    ////Define a grid of points to plot the plane
+    //Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(2000, 0, 1);
+    //Eigen::VectorXd y = Eigen::VectorXd::LinSpaced(2000, 0, 1);
+    //Eigen::VectorXd z = Eigen::VectorXd::LinSpaced(2000, 0, 1);
+
+    ////Compute z coordinate using the plane equation
+    ////Z = (-a * X - b * Y - d) / c
+
+    ////Create a 3D plot
+    //plt::figure()
+
+    ////Plot the plane surface
+    //figure.plot_surface(X, Y, Z, alpha = 0.5)
+
+    ////Add axis labels
+    //ax.set_xlabel('X')
+    //ax.set_ylabel('Y')
+    //ax.set_zlabel('Z')
+
+    ////Show the plot
+    //plt::show()
+    //plt::plot(x, y);
+
+}
+
 bool wall_detector(vector <Eigen::Vector3d>& points)
 {
     bool is_wall = false;
-
+    plotPlane(points);
     vector<float> x_cord;
     for (auto point : points)
     {
