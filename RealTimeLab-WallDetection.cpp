@@ -345,6 +345,10 @@ double angleBetweenPlanes(Eigen::Vector3d normalVector)
 bool wallDetector(vector <Eigen::Vector3d>& points)
 {
     bool is_wall = false;
+    if (! isNormallyDistributed(z_coord))
+    {
+        return false;
+    }
     // plotPlane(points);
 
     vector<float> x_cord;
