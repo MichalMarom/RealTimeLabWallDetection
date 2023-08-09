@@ -379,9 +379,9 @@ bool wallDetector(vector <Eigen::Vector3d>& points)
     }
     if (! isNormallyDistributed(z_cord))
     {
-        //return false;
+        is_wall = false;
+        return is_wall;
     }
-    // plotPlane(points);
 
     // Find the plane that minimizes the distance to the points
     Eigen::Vector4d plane = findMinimizingPlane(points);
@@ -389,16 +389,25 @@ bool wallDetector(vector <Eigen::Vector3d>& points)
 
     // Find the angle between the plane and XZ-plane
     double angle_between_plane_and_XZplane = angleBetweenPlanes(plane_normal);
+
+    if (angle_between_plane_and_XZplane >= 88 && angle_between_plane_and_XZplane <= 92)
+    {
+        is_wall =  true;
+    }
+    else {
+        is_wall = false;
+    }
+    return is_wall;
     
-    // Find XY-plane
-    Eigen::Vector4d XY_plane = findXYPlane(points);
-    Eigen::Vector3d XY_plane_normal = Eigen::Vector3d(XY_plane[0], XY_plane[1], XY_plane[2]);
-    // Find the angle between XY-plane and XZ-plane
-    double angle_between_XYplane_and_XZplane = angleBetweenPlanes(XY_plane_normal);
+    //// Find XY-plane
+    //Eigen::Vector4d XY_plane = findXYPlane(points);
+    //Eigen::Vector3d XY_plane_normal = Eigen::Vector3d(XY_plane[0], XY_plane[1], XY_plane[2]);
+    //// Find the angle between XY-plane and XZ-plane
+    //double angle_between_XYplane_and_XZplane = angleBetweenPlanes(XY_plane_normal);
 
-    double isEqual = (angle_between_XYplane_and_XZplane / angle_between_plane_and_XZplane);
+    //double isEqual = (angle_between_XYplane_and_XZplane / angle_between_plane_and_XZplane);
 
-    return std::abs((angle_between_XYplane_and_XZplane - angle_between_plane_and_XZplane) < 0.001);
+    //return std::abs((angle_between_XYplane_and_XZplane - angle_between_plane_and_XZplane) < 0.001);
 }
 
 int main() 
