@@ -272,22 +272,22 @@ double angleBetweenPlanes(Eigen::Vector3d normalVector)
 ////////////////////////
 void plotPlane(vector <Eigen::Vector3d>& points)
 {
-    //std::vector<std::vector<double>> x, y, z;
-    //for(auto point: points){
-    //    std::vector<double> x_row, y_row, z_row;
-    //    for (auto point : points) {
-    //        x_row.push_back(point[0]);
-    //        y_row.push_back(point[1]);
-    //        z_row.push_back(point[2]);
-    //    }
-    //    x.push_back(x_row);
-    //    y.push_back(y_row);
-    //    z.push_back(z_row);
-    //}
+    std::vector<std::vector<double>> x, y, z;
+    for(auto point: points){
+        std::vector<double> x_row, y_row, z_row;
+        for (auto point : points) {
+            x_row.push_back(point[0]);
+            y_row.push_back(point[1]);
+            z_row.push_back(point[2]);
+        }
+        x.push_back(x_row);
+        y.push_back(y_row);
+        z.push_back(z_row);
+    }
 
-    //plt::plot_surface(x, y, z);
-    //plt::plot({ 0, 1, 2, 3 });
-    //plt::show();
+    plt::plot_surface(x, y, z);
+    plt::plot({ 0, 1, 2, 3 });
+    plt::show();
 
     ////Plane coefficients(a, b, c, d) from the equation ax + by + cz + d = 0
     ////a, b, c, d = 2, 3, -1, 5
@@ -378,6 +378,23 @@ bool wall_detector(vector <Eigen::Vector3d>& points)
 
 int main() 
 {
+    std::vector<std::vector<double>> x, y, z;
+    for (double i = -5; i <= 5; i += 0.25) {
+        std::vector<double> x_row, y_row, z_row;
+        for (double j = -5; j <= 5; j += 0.25) {
+            x_row.push_back(i);
+            y_row.push_back(j);
+            z_row.push_back(::std::sin(::std::hypot(i, j)));
+        }
+        x.push_back(x_row);
+        y.push_back(y_row);
+        z.push_back(z_row);
+    }
+
+    //plt::plot_surface(x, y, z);
+    plt::plot({ 1,3,2,4 });
+    plt::show();
+
     vector<Test> tests;
     vector<bool> actual_labels;
     vector<bool> predicted_labels;
