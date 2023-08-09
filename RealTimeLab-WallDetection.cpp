@@ -244,7 +244,6 @@ bool isDataNormallyDistributed(const std::vector<Eigen::Vector3d>& wall)
     return is_data_normal;
 }
 
-
 //////////////////////////
 // ****** Eigen ****** //
 ////////////////////////
@@ -335,6 +334,34 @@ double angleBetweenPlanes(Eigen::Vector3d normalVector)
     return degrees_angle;
 }
 
+/* Function that find the XY plane
+ input:
+       vector<Eigen::Vector3d> points
+
+ output:
+        Eigen::Vector4d   plane equation (ax+by+cz+d=0)
+*/
+Eigen::Vector4d findXYPlane(const std::vector<Eigen::Vector3d>& points) {
+    Eigen::Matrix<double, Eigen::Dynamic, 3> A(points.size(), 3);
+
+    // Fill the matrix A with points
+    for (size_t i = 0; i < points.size(); ++i) {
+        A.row(i) = points[i].transpose();
+    }
+
+    // Compute the centroid of the points
+    Eigen::Vector3d centroid = A.colwise().mean();
+
+    // Calculate the normal vector for the XY plane (Z=0)
+    Eigen::Vector3d normal(0.0, 0.0, 1.0);
+
+    // Calculate the d value (distance from origin to the plane)
+    double d = -normal.dot(centroid);
+
+    // Return the plane as a 4D vector (a, b, c, d)
+    return Eigen::Vector4d(normal.x(), normal.y(), normal.z(), d);
+}
+
 /* Function that given points - decides whether they are a wall
  input:
        vector<Eigen::Vector3d> points
@@ -345,72 +372,33 @@ double angleBetweenPlanes(Eigen::Vector3d normalVector)
 bool wallDetector(vector <Eigen::Vector3d>& points)
 {
     bool is_wall = false;
-    if (! isNormallyDistributed(z_coord))
+
+    std::vector<double> z_cord;
+    for (Eigen::Vector3d point : points) {
+        z_cord.push_back(point.z());
+    }
+    if (! isNormallyDistributed(z_cord))
     {
-        return false;
+        //return false;
     }
     // plotPlane(points);
-
-    vector<float> x_cord;
-    for (auto point : points)
-    {
-        x_cord.push_back(point[0]);
-    }
-    float x_mean = computeMean(x_cord);
-    float x_std = computeStdDeviation(x_cord, x_mean);
-
-    vector<float> y_cord;
-    for (auto point : points)
-    {
-        y_cord.push_back(point[1]);
-    }
-    float y_mean = computeMean(y_cord);
-    float y_std = computeStdDeviation(y_cord, y_mean);
-
-    vector<float> z_cord;
-    for (auto point : points)
-    {
-        z_cord.push_back(point[2]);
-    }
-
-    float z_mean = computeMean(z_cord);
-    float z_std = computeStdDeviation(z_cord, z_mean);
-
-    float test_1 = z_std / x_std;
-    float test_2 = z_std / y_std;
-
-    int itest_1 = (int)floor(test_1);
-    int itest_2 = (int)floor(test_2);
-    test_1 = (int)floor((test_1 - itest_1) * 1000);
-    test_2 = (int)floor((test_2 - itest_2) * 1000);
-    //test_1 = (int(floor(test_1 * 100))) / 100;
-    //test_2 = (int(floor(test_2 * 100))) / 100;
-
-    //test_1 -= itest_1;
-    //test_2 -= itest_2;
-
-    if (test_1 == test_2)
-    {
-        return true;
-    }
-    else {
-        return false;
-    }
 
     // Find the plane that minimizes the distance to the points
     Eigen::Vector4d plane = findMinimizingPlane(points);
     Eigen::Vector3d plane_normal = Eigen::Vector3d(plane[0], plane[1], plane[2]);
 
-    // Find the angle between the planeand XZ-plane
+    // Find the angle between the plane and XZ-plane
     double angle_between_plane_and_XZplane = angleBetweenPlanes(plane_normal);
+    
+    // Find XY-plane
+    Eigen::Vector4d XY_plane = findXYPlane(points);
+    Eigen::Vector3d XY_plane_normal = Eigen::Vector3d(XY_plane[0], XY_plane[1], XY_plane[2]);
+    // Find the angle between XY-plane and XZ-plane
+    double angle_between_XYplane_and_XZplane = angleBetweenPlanes(XY_plane_normal);
 
-    std::vector<double> z_coord;
-    for (Eigen::Vector3d point : points) {
-        z_coord.push_back(point.z());
-    }
+    double isEqual = (angle_between_XYplane_and_XZplane / angle_between_plane_and_XZplane);
 
-    // Check if it is wall ??
-    return isNormallyDistributed(z_coord);
+    return isEqual;
 }
 
 int main() 
@@ -431,10 +419,11 @@ int main()
             actual_labels.push_back(false);
         }
     }
-
+    int counter = 0;
     for (auto test : tests)
     {
         predicted_labels.push_back(wallDetector(test.points));
+        counter++;
     }
 
     vector<vector<int>> confusionMatrix(numClasses, vector<int>(numClasses, 0));
