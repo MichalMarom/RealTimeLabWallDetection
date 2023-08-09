@@ -1,4 +1,6 @@
 #include "Test.h"
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
 // Function that given if this test represent a wall or not -  Sets points randomly for that test
 // input:

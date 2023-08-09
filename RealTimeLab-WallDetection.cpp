@@ -1,10 +1,42 @@
 #include "IncludeLibraries.h"
 #include "Test.h"
 
+bool isNormallyDistributed(const std::vector<double>& data, double significance_level = 0.05) {
+    if (data.empty()) {
+        // Empty data vector, cannot perform the test
+        return false;
+    }
+
+    // Sort the data vector in ascending order
+    std::vector<double> sorted_data = data;
+    std::sort(sorted_data.begin(), sorted_data.end());
+
+    // Calculate the mean and standard deviation of the data
+    double mean = gsl_stats_mean(&sorted_data[0], 1, sorted_data.size());
+    double stddev = gsl_stats_sd(&sorted_data[0], 1, sorted_data.size());
+
+    // Calculate the test statistic (D) and p-value
+    double D = 0.0;
+    for (size_t i = 0; i < sorted_data.size(); ++i) {
+        double F_obs = gsl_cdf_ugaussian_P((sorted_data[i] - mean) / stddev);
+        double F_exp = (i + 1.0) / sorted_data.size();
+        double diff = std::abs(F_obs - F_exp);
+        if (diff > D) {
+            D = diff;
+        }
+    }
+
+    // Calculate the critical value for the given significance level and sample size
+    double critical_value = gsl_cdf_ugaussian_Pinv(1.0 - significance_level / 2.0) / std::sqrt(sorted_data.size());
+
+    return D <= critical_value;
+}
+
+
 // Tolerance value for floating-point precision
 const double tolerance = 1e-6;
 
-vector<vector<float>> random_wall()
+vector<vector<float>> randomWall()
 {
     float random_points = 400;
     int min_cord = 1;
@@ -41,7 +73,7 @@ bool collinear(float x1, float y1, float x2, float y2, float x3, float y3)
     return (y1 - y2) * (x1 - x3) == (y1 - y3) * (x1 - x2);
 }
 
-vector<vector<float>> get_collinear_points(vector<vector<float>> points)
+vector<vector<float>> getCollinearPoints(vector<vector<float>> points)
 {
     bool is_collinear = false;
     int a_index = 0;
@@ -69,7 +101,7 @@ vector<vector<float>> get_collinear_points(vector<vector<float>> points)
     return collinear_points;
 }
 
-vector<float> equation_plane(float x1, float y1, float z1,
+vector<float> planeEquation(float x1, float y1, float z1,
     float x2, float y2, float z2,
     float x3, float y3, float z3)
 {
@@ -89,33 +121,30 @@ vector<float> equation_plane(float x1, float y1, float z1,
     equation_plane.push_back(b);
     equation_plane.push_back(c);
     equation_plane.push_back(d);
-    //std::cout << std::fixed;
-    //std::cout << std::setprecision(2);
-    //cout << "equation of plane is " << a << " x + " << b
-    //    << " y + " << c << " z + " << d << " = 0.";
-
+    /*std::cout << std::fixed;
+    std::cout << std::setprecision(2);
+    cout << "equation of plane is " << a << " x + " << b
+        << " y + " << c << " z + " << d << " = 0.";
+    */
     return equation_plane;
-
-
 }
 
-
-bool is_point_on_plane(vector<float>& point, vector<float>& plane)
+bool isPointOnPlane(vector<float>& point, vector<float>& plane)
 {
     float result = (plane[0] * point[0]) + (plane[1] * point[1]) + (plane[2] * point[2]) + plane[3];
     return (abs(result) < tolerance);
 }
 
-bool Sol_with_plane(vector <vector<float>>& wall)
+bool planeSolution(vector <vector<float>>& wall)
 {
-    //Find hyperplane with 3 points from the samples and check if all the point lies in the hyperplane
-    vector<vector<float>> collinear_points = get_collinear_points(wall);
-    vector<float> plane_equation = equation_plane(collinear_points[0][0], collinear_points[0][1], collinear_points[0][2],
+    // Find hyperplane with 3 points from the samples and check if all the point lies in the hyperplane
+    vector<vector<float>> collinear_points = getCollinearPoints(wall);
+    vector<float> plane_equation = planeEquation(collinear_points[0][0], collinear_points[0][1], collinear_points[0][2],
                                                     collinear_points[1][0], collinear_points[1][1], collinear_points[1][2],
                                                     collinear_points[2][0], collinear_points[2][1], collinear_points[2][2]);
     for (auto point : wall)
     {
-        if (is_point_on_plane(point, plane_equation) == false)
+        if (isPointOnPlane(point, plane_equation) == false)
         {
             return false;
         }
@@ -126,11 +155,11 @@ bool Sol_with_plane(vector <vector<float>>& wall)
 ///////////////////////////
 // ****** T-Test ****** //
 /////////////////////////
-float computeMean(const vector<float> v)
+float computeMean(const vector<float> value)
 {
     float sum = 0;
-    for (auto e : v) { sum += e; }
-    return sum / v.size();
+    for (auto e : value) { sum += e; }
+    return sum / value.size();
 }
 
 float computeStdDeviation(const vector<float>& values, float mean)
@@ -141,7 +170,7 @@ float computeStdDeviation(const vector<float>& values, float mean)
     return sqrt(variance);
 }
 
-bool Sol_with_t_test(vector <vector<float>>& wall)
+bool TTestSol(vector <vector<float>>& wall)
 {
     // Find the noise in Z coordinates and check if the t_score is smeller then 1 - then the noise is normally distributed
     vector<float> z_cord;
@@ -167,19 +196,65 @@ bool Sol_with_t_test(vector <vector<float>>& wall)
     return true;
 }
 
+bool zTest(const std::vector<Eigen::Vector3d>& wall)
+{
+    // Find the noise in Z coordinates and check if the t_score is smeller then 1 - then the noise is normally distributed
+    vector<float> z_cord;
+    for (const auto& point : wall)
+    {
+        z_cord.push_back(point[2]);
+    }
+
+    float mean = computeMean(z_cord);
+    float stddev = computeStdDeviation(z_cord, mean);
+
+    // Calculate the sample mean
+    float sample_mean = computeMean(z_cord);
+
+    // Calculate the sample standard deviation
+    float sample_stddev = computeStdDeviation(z_cord, sample_mean);
+
+    // Calculate the number of samples
+    int num_samples = static_cast<int>(z_cord.size());
+
+    // Calculate the Z-score
+    double z_score = (sample_mean - mean) / (stddev / sqrt(static_cast<double>(num_samples)));
+
+    // Define the significance level (alpha) - choose an appropriate value based on your test
+    const double alpha = 0.05;
+
+    // Check if the absolute Z-score is less than the critical value for the significance level
+    double critical_value = 1.96; // For a two-tailed test at alpha = 0.05
+    if (std::abs(z_score) <= critical_value)
+    {
+        return true; // Null hypothesis accepted, sample mean is not significantly different from population mean
+    }
+    else
+    {
+        return false; // Null hypothesis rejected, sample mean is significantly different from population mean
+    }
+}
+
+bool isDataNormallyDistributed(const std::vector<Eigen::Vector3d>& wall)
+{
+    // Perform the Z-test on the 'wall' data
+    bool is_data_normal = zTest(wall);
+
+    // Return the result
+    return is_data_normal;
+}
 
 //////////////////////////
 // ****** Eigen ****** //
 ////////////////////////
 
-// Function that calculate the sum of distance to a set of points from the plane
-// input:
-//       Eigen::Vector4d&        plane
-//       vector<Eigen::Vector3d> points
-//
-// output:
-//        float                   error
-
+/* Function that calculate the sum of distance to a set of points from the plane
+input:
+      Eigen::Vector4d&   plane
+      vector<Eigen::Vector3d> points
+output:       
+       float error
+*/
 float findPlaneError(const Eigen::Vector4d& plane, const vector<Eigen::Vector3d>& points)
 {
     float error = 0;
@@ -195,19 +270,18 @@ float findPlaneError(const Eigen::Vector4d& plane, const vector<Eigen::Vector3d>
         float numerator = std::abs(a * x + b * y + c * z + d);
         float denominator = std::sqrt(a * a + b * b + c * c);
         error += (numerator / denominator);
-
     }
 
     return error;
 }
 
-// Function that find the plane that minimizes the distance to a set of points
-// input:
-//       vector<Eigen::Vector3d> points
-//
-// output:
-//        Eigen::Vector4d        plane equation (ax+by+cz+d=0)
+/* Function that find the plane that minimizes the distance to a set of points
+ input:
+       vector<Eigen::Vector3d> points
 
+ output:
+        Eigen::Vector4d   plane equation (ax+by+cz+d=0)
+*/
 Eigen::Vector4d findMinimizingPlane(const vector<Eigen::Vector3d>& points) {
     Eigen::Matrix<double, Eigen::Dynamic, 3> A(points.size(), 3);
 
@@ -236,88 +310,66 @@ Eigen::Vector4d findMinimizingPlane(const vector<Eigen::Vector3d>& points) {
     return Eigen::Vector4d(normal.x(), normal.y(), normal.z(), d);
 }
 
-// Function that calculate the angle between given plane to X-Z Plane
-// input:
-//       Eigen::Vector3d& plane (coefficients a,b,c of the plane equation)
-//
-// output:
-//        double          angleDeg (in degrees)   
+/* Function that calculate the angle between given plane to X - Z Plane
+ input:
+       Eigen::Vector3d& plane (coefficients a,b,c of the plane equation)
 
+ output:
+        double    degrees_angle (in degrees)   
+*/
 double angleBetweenPlanes(Eigen::Vector3d normalVector)
 {
     // Normal vector of the X-Z plane
     Eigen::Vector3d xzPlaneNormal = Eigen::Vector3d(0, 1, 0); 
 
-    double dotProd = (normalVector[0] * xzPlaneNormal[0]) + (normalVector[1] * xzPlaneNormal[1]) + (normalVector[2] * xzPlaneNormal[2]);
+    double dot_prod = (normalVector[0] * xzPlaneNormal[0]) + (normalVector[1] * xzPlaneNormal[1]) + (normalVector[2] * xzPlaneNormal[2]);
     double mag1 = sqrt((normalVector[0] * normalVector[0]) + (normalVector[1] * normalVector[1]) + (normalVector[2] * normalVector[2]));
     double mag2 = sqrt((xzPlaneNormal[0] * xzPlaneNormal[0]) + (xzPlaneNormal[1] * xzPlaneNormal[1]) + (xzPlaneNormal[2] * xzPlaneNormal[2]));
 
-    double cosAngle = dotProd / (mag1 * mag2);
-    double angleRad = acos(cosAngle);
+    double cos_angle = dot_prod / (mag1 * mag2);
+    double radian_angle = acos(cos_angle);
 
     // Convert the angle from radians to degrees
-    double angleDeg = angleRad * (180.0 / M_PI);
-    return angleDeg;
+    double degrees_angle = radian_angle * (180.0 / M_PI);
+    return degrees_angle;
 }
 
-// Function that given points - decides whether they are a wall
-// input:
-//       vector<Eigen::Vector3d> points
-//
-// output:
-//        bool                   is_wall
+/* Function that find the XY plane
+ input:
+       vector<Eigen::Vector3d> points
 
-//////////////////////////
-// ****** Plot ****** //
-////////////////////////
-void plotPlane(vector <Eigen::Vector3d>& points)
-{
-    std::vector<std::vector<double>> x, y, z;
-    for(auto point: points){
-        std::vector<double> x_row, y_row, z_row;
-        for (auto point : points) {
-            x_row.push_back(point[0]);
-            y_row.push_back(point[1]);
-            z_row.push_back(point[2]);
-        }
-        x.push_back(x_row);
-        y.push_back(y_row);
-        z.push_back(z_row);
+ output:
+        Eigen::Vector4d   plane equation (ax+by+cz+d=0)
+*/
+Eigen::Vector4d findXYPlane(const std::vector<Eigen::Vector3d>& points) {
+    Eigen::Matrix<double, Eigen::Dynamic, 3> A(points.size(), 3);
+
+    // Fill the matrix A with points
+    for (size_t i = 0; i < points.size(); ++i) {
+        A.row(i) = points[i].transpose();
     }
 
-    plt::plot_surface(x, y, z);
-    plt::plot({ 0, 1, 2, 3 });
-    plt::show();
+    // Compute the centroid of the points
+    Eigen::Vector3d centroid = A.colwise().mean();
 
-    ////Plane coefficients(a, b, c, d) from the equation ax + by + cz + d = 0
-    ////a, b, c, d = 2, 3, -1, 5
+    // Calculate the normal vector for the XY plane (Z=0)
+    Eigen::Vector3d normal(0.0, 0.0, 1.0);
 
-    ////Define a grid of points to plot the plane
-    //Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(2000, 0, 1);
-    //Eigen::VectorXd y = Eigen::VectorXd::LinSpaced(2000, 0, 1);
-    //Eigen::VectorXd z = Eigen::VectorXd::LinSpaced(2000, 0, 1);
+    // Calculate the d value (distance from origin to the plane)
+    double d = -normal.dot(centroid);
 
-    ////Compute z coordinate using the plane equation
-    ////Z = (-a * X - b * Y - d) / c
-
-    ////Create a 3D plot
-    //plt::figure()
-
-    ////Plot the plane surface
-    //figure.plot_surface(X, Y, Z, alpha = 0.5)
-
-    ////Add axis labels
-    //ax.set_xlabel('X')
-    //ax.set_ylabel('Y')
-    //ax.set_zlabel('Z')
-
-    ////Show the plot
-    //plt::show()
-    //plt::plot(x, y);
-
+    // Return the plane as a 4D vector (a, b, c, d)
+    return Eigen::Vector4d(normal.x(), normal.y(), normal.z(), d);
 }
 
-bool wall_detector(vector <Eigen::Vector3d>& points)
+/* Function that given points - decides whether they are a wall
+ input:
+       vector<Eigen::Vector3d> points
+
+ output:
+        bool  is_wall
+*/
+bool wallDetector(vector <Eigen::Vector3d>& points)
 {
     bool is_wall = false;
     plotPlane(points);
@@ -362,18 +414,42 @@ bool wall_detector(vector <Eigen::Vector3d>& points)
         return false;
     }
 
+    std::vector<double> z_cord;
+    for (Eigen::Vector3d point : points) {
+        z_cord.push_back(point.z());
+    }
+    if (! isNormallyDistributed(z_cord))
+    {
+        is_wall = false;
+        return is_wall;
+    }
+
     // Find the plane that minimizes the distance to the points
     Eigen::Vector4d plane = findMinimizingPlane(points);
 
     Eigen::Vector3d plane_normal = Eigen::Vector3d(plane[0], plane[1], plane[2]);
 
-    // Find the angle between the planeand XZ-plane
+    // Find the angle between the plane and XZ-plane
     double angle_between_plane_and_XZplane = angleBetweenPlanes(plane_normal);
 
-    // Check if it is wall ??
+    if (angle_between_plane_and_XZplane >= 88 && angle_between_plane_and_XZplane <= 92)
+    {
+        is_wall =  true;
+    }
+    else {
+        is_wall = false;
+    }
+    return is_wall;
+    
+    //// Find XY-plane
+    //Eigen::Vector4d XY_plane = findXYPlane(points);
+    //Eigen::Vector3d XY_plane_normal = Eigen::Vector3d(XY_plane[0], XY_plane[1], XY_plane[2]);
+    //// Find the angle between XY-plane and XZ-plane
+    //double angle_between_XYplane_and_XZplane = angleBetweenPlanes(XY_plane_normal);
 
-    return true;
+    //double isEqual = (angle_between_XYplane_and_XZplane / angle_between_plane_and_XZplane);
 
+    //return std::abs((angle_between_XYplane_and_XZplane - angle_between_plane_and_XZplane) < 0.001);
 }
 
 int main() 
@@ -411,10 +487,11 @@ int main()
             actual_labels.push_back(false);
         }
     }
-
+    int counter = 0;
     for (auto test : tests)
     {
-        predicted_labels.push_back(wall_detector(test.points));
+        predicted_labels.push_back(wallDetector(test.points));
+        counter++;
     }
 
     vector<vector<int>> confusionMatrix(numClasses, vector<int>(numClasses, 0));
@@ -427,6 +504,5 @@ int main()
     }
 
     return 0;
-   
 }
 
