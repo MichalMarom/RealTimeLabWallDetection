@@ -398,7 +398,7 @@ bool wallDetector(vector <Eigen::Vector3d>& points)
 
     double isEqual = (angle_between_XYplane_and_XZplane / angle_between_plane_and_XZplane);
 
-    return isEqual;
+    return std::abs((angle_between_XYplane_and_XZplane - angle_between_plane_and_XZplane) < 0.001);
 }
 
 int main() 
