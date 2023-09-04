@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RealTimeLab-WallDetection.cpp">
+    <ClCompile Include="RealTimeLabWallDetection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Test.cpp">
@@ -23,13 +23,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RealTimeLab-WallDetection.h">
+    <ClInclude Include="RealTimeLabWallDetection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Test.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IncludeLibraries.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

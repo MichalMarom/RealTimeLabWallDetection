@@ -129,12 +129,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="RealTimeLab-WallDetection.cpp" />
+    <ClCompile Include="RealTimeLabWallDetection.cpp" />
     <ClCompile Include="Test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="IncludeLibraries.h" />
-    <ClInclude Include="RealTimeLab-WallDetection.h" />
+    <ClInclude Include="RealTimeLabWallDetection.h" />
     <ClInclude Include="Test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
