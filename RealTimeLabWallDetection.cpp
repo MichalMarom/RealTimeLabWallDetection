@@ -1,86 +1,49 @@
 #include "RealTimeLabWallDetection.h"
 #include "Test.h"
 
-//// **** Math Functions **** //
-///*
-//    Compute the mean of a vector
-// Input:
-//       const std::vector<double>    value
-//
-// Output:
-//        double                      sum / double(value.size())
-//*/
-//float WallHandle::computeMean(const vector<float> values)
-//{
-//    float sum = 0;
-//    for (auto value : values) 
-//    { 
-//        sum += value; 
-//    }
-// 
-//    return sum / values.size();
-//}
-//
-// /*
-//Compute the Std Deviation of a vector
-//Input :
-//const std::vector<double>    values
-//double                       mean
-//
-//Output :
-//double                      sqrt(variance)
-//* /
-//float WallHandle::computeStdDeviation(const vector<float>& values, float mean)
-//{
-//    float variance_sum = 0;
-//    for (auto value : values) 
-//    { 
-//        variance_sum += (value - mean) * (value - mean);
-//    }
-//    float variance = variance_sum / values.size();
-//    return sqrt(variance);
-//}
+/*
+    Checks if data is normally distributed
+ Input:
+       const std::vector<double>&       data
 
-///*
-//    Checks if data is normally distributed
-// Input:
-//       const std::vector<double>&       data
-//
-// Output:
-//        bool                            test_statistic <= critical_value
-//*/
-//bool WallHandle::isNormallyDistributed(const std::vector<double>& data) 
-//{
-//    double significance_level = 0.05;
-//    if (data.empty()) {
-//        // Empty data vector, cannot perform the test
-//        return false;
-//    }
-//
-//    // Sort the data vector in ascending order
-//    std::vector<double> sorted_data = data;
-//    std::sort(sorted_data.begin(), sorted_data.end());
-//
-//    // Calculate the mean and standard deviation of the data
-//    double mean = gsl_stats_mean(&sorted_data[0], 1, sorted_data.size());
-//    double stddev = gsl_stats_sd(&sorted_data[0], 1, sorted_data.size());
-//
-//    // Calculate the test statistic and p-value
-//    double test_statistic = 0.0;
-//    for (size_t i = 0; i < sorted_data.size(); ++i) {
-//        double F_obs = gsl_cdf_ugaussian_P((sorted_data[i] - mean) / stddev);
-//        double F_exp = (i + 1.0) / sorted_data.size();
-//        double diff = std::abs(F_obs - F_exp);
-//        if (diff > test_statistic) {
-//            test_statistic = diff;
-//        }
-//    }
-//
-//    // Calculate the critical value for the given significance level and sample size
-//    double critical_value = gsl_cdf_ugaussian_Pinv(1.0 - significance_level / 2.0) / std::sqrt(sorted_data.size());
-//
-//    return test_statistic <= critical_value;
-//}
+ Output:
+        bool                            test_statistic <= critical_value
+*/
+bool WallHandler::isNormallyDistributed(const std::vector<double>& data) 
+{
+    double significance_level = 0.05;
+    if (data.empty()) 
+    {
+        // Empty data vector, cannot perform the test
+        return false;
+    }
+
+    // Sort the data vector in ascending order
+    std::vector<double> sorted_data = data;
+    std::sort(sorted_data.begin(), sorted_data.end());
+
+    // Calculate the mean and standard deviation of the data
+    double mean = gsl_stats_mean(&sorted_data[0], 1, sorted_data.size());
+    double stddev = gsl_stats_sd(&sorted_data[0], 1, sorted_data.size());
+
+    // Calculate the test statistic and p-value
+    double test_statistic = 0.0;
+    for (size_t i = 0; i < sorted_data.size(); ++i) 
+    {
+        double F_obs = gsl_cdf_ugaussian_P((sorted_data[i] - mean) / stddev);
+        double F_exp = (i + 1.0) / sorted_data.size();
+        double diff = std::abs(F_obs - F_exp);
+        if (diff > test_statistic) 
+        {
+            test_statistic = diff;
+        }
+    }
+
+    // Calculate the critical value for the given significance level and sample size
+    double critical_value = gsl_cdf_ugaussian_Pinv(1.0 - significance_level / 2.0) / std::sqrt(sorted_data.size());
+
+    return test_statistic <= critical_value;
+}
 
 /*
     Function that find the plane that minimizes the distance to a set of points
@@ -90,7 +53,7 @@
  Output:
         Eigen::Vector4d   plane equation (ax+by+cz+d=0)
 */
-Eigen::Vector4d WallHandle::findMinimizingPlane(const vector<Eigen::Vector3d>& points) {
+Eigen::Vector4d WallHandler::findMinimizingPlane(const vector<Eigen::Vector3d>& points) {
     Eigen::Matrix<double, Eigen::Dynamic, 3> A(points.size(), 3);
 
     // Fill the matrix A with points
@@ -126,7 +89,7 @@ Eigen::Vector4d WallHandle::findMinimizingPlane(const vector<Eigen::Vector3d>& p
 Output:
         double              degrees_angle
 */
-double WallHandle::angleBetweenPlanes(Eigen::Vector3d normal_vector)
+double WallHandler::angleBetweenPlanes(Eigen::Vector3d normal_vector)
 {
     // Normal vector of the X-Z plane
     Eigen::Vector3d XZ_plane_normal = Eigen::Vector3d(0, 1, 0);
@@ -151,7 +114,7 @@ double WallHandle::angleBetweenPlanes(Eigen::Vector3d normal_vector)
  Output:
         bool                        is_wall
 */
-bool WallHandle::wallDetector(vector <Eigen::Vector3d>& points)
+bool WallHandler::wallDetector(vector <Eigen::Vector3d>& points)
 {
     bool is_wall = false;
 
@@ -159,11 +122,13 @@ bool WallHandle::wallDetector(vector <Eigen::Vector3d>& points)
     for (Eigen::Vector3d point : points) {
         z_cord.push_back(point.z());
     }
-    /*if (!isNormallyDistributed(z_cord))
+
+    // Check if z-cord is normally distibuted
+    if (!isNormallyDistributed(z_cord))
     {
         is_wall = false;
         return is_wall;
-    }*/
+    }
 
     // Find the plane that minimizes the distance to the points
     Eigen::Vector4d plane = findMinimizingPlane(points);
@@ -188,7 +153,7 @@ int main()
     vector<bool> actual_labels;
     vector<bool> predicted_labels;
     int num_classes = 2;
-    WallHandle wall;
+    WallHandler wall;
 
     // Devides planes to wall and not a wall
     for (int i = 0; i < 10000; i++) {
@@ -220,6 +185,13 @@ int main()
         int predicted_class = predicted_labels[i];
         confusionMatrix[actual_class][predicted_class]++;
     }
-
+    std::cout << "Confusion Matrix: " << std::endl;
+    // Print the confusion matrix
+    for (int i = 0; i < num_classes; i++) {
+        for (int j = 0; j < num_classes; j++) {
+            std::cout << confusionMatrix[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
     return 0;
 }

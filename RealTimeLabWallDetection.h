@@ -14,12 +14,12 @@
 
 using namespace std;
 
-// WallHandle class checks if given points are a wall
-class WallHandle{
+// WallHandler class checks if given points are a wall
+class WallHandler{
 
 public:
 	bool wallDetector(vector <Eigen::Vector3d>& points);
-	//bool isNormallyDistributed(const std::vector<double>& data);
+	bool isNormallyDistributed(const std::vector<double>& data);
 	double angleBetweenPlanes(Eigen::Vector3d normal_vector);
 	Eigen::Vector4d findMinimizingPlane(const vector<Eigen::Vector3d>& points);
 };
